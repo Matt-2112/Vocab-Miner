@@ -1,5 +1,5 @@
 import Database from "better-sqlite3";
-import archiver from "archiver";
+import * as archiver from "archiver";
 import { createWriteStream, mkdirSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
