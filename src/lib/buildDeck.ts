@@ -1,6 +1,6 @@
 import Database from "better-sqlite3";
-import * as archiver from "archiver";
-import { createWriteStream, mkdirSync } from "fs";
+import JSZip from "jszip";
+import { mkdirSync, readFileSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import type { TranslatedEntry } from "./translate";
@@ -138,15 +138,10 @@ function insertDeck(db: Database.Database, deckId: number, deckName: string, now
   db.prepare("UPDATE col SET decks = ? WHERE id = 1").run(JSON.stringify(decks));
 }
 
-function zipDeck(dbPath: string, outputPath: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const output = createWriteStream(outputPath);
-    const archive = archiver("zip", { zlib: { level: 9 } });
-    output.on("close", resolve);
-    archive.on("error", reject);
-    archive.pipe(output);
-    archive.file(dbPath, { name: "collection.anki2" });
-    archive.append("{}", { name: "media" });
-    archive.finalize();
-  });
+async function zipDeck(dbPath: string, outputPath: string): Promise<void> {
+  const zip = new JSZip();
+  zip.file("collection.anki2", readFileSync(dbPath));
+  zip.file("media", "{}");
+  const buffer = await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
+  writeFileSync(outputPath, buffer);
 }
