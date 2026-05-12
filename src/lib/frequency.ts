@@ -1,4 +1,4 @@
-import { PorterStemmer, WordTokenizer } from "natural";
+import { PorterStemmer } from "natural";
 import * as stopword from "stopword";
 import type { SubtitleCue } from "./parseSubtitles";
 
@@ -61,7 +61,9 @@ function buildProperNounSet(cues: SubtitleCue[], sourceLang: string): Set<string
   return properNouns;
 }
 
-const tokenizer = new WordTokenizer();
+function tokenize(text: string): string[] {
+  return text.match(/\p{L}+/gu) ?? [];
+}
 
 function scoreExampleSentence(text: string): number {
   const words = text.split(/\s+/);
@@ -82,7 +84,7 @@ export function buildFrequencyList(
   const stemToExamples: Map<string, SubtitleCue[]> = new Map();
 
   for (const cue of cues) {
-    const tokens = tokenizer.tokenize(cue.text) ?? [];
+    const tokens = tokenize(cue.text);
     const filtered = stopword.removeStopwords(
       tokens.map((t) => t.toLowerCase()),
       stopwords
