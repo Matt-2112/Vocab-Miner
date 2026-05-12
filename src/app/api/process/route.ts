@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No cues parsed from subtitle file" }, { status: 400 });
   }
 
-  const frequencyList = buildFrequencyList(cues, topN);
+  const frequencyList = buildFrequencyList(cues, topN, sourceLang);
   await enrichWithDictionaryExamples(frequencyList, sourceLang);
   const translated = await translateEntries(frequencyList, sourceLang, apiKey);
   const apkgPath = await buildAnkiDeck(translated, deckName);

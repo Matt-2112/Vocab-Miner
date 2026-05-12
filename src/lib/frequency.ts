@@ -1,5 +1,5 @@
 import { PorterStemmer, WordTokenizer } from "natural";
-import { removeStopwords, eng } from "stopword";
+import * as stopword from "stopword";
 import type { SubtitleCue } from "./parseSubtitles";
 
 export interface WordEntry {
@@ -7,6 +7,27 @@ export interface WordEntry {
   stem: string;
   count: number;
   exampleSentence: string;
+}
+
+// Maps DeepL/app language codes to stopword package export names
+const STOPWORD_LANG_MAP: Record<string, keyof typeof stopword> = {
+  de: "deu",
+  fr: "fra",
+  es: "spa",
+  it: "ita",
+  pt: "por",
+  nl: "nld",
+  pl: "pol",
+  ru: "rus",
+  ja: "jpn",
+  zh: "zho",
+  ko: "kor",
+};
+
+function getStopwords(sourceLang: string): string[] {
+  const key = STOPWORD_LANG_MAP[sourceLang];
+  const list = key ? stopword[key] : null;
+  return Array.isArray(list) ? (list as string[]) : stopword.eng;
 }
 
 const tokenizer = new WordTokenizer();
@@ -21,20 +42,22 @@ function scoreExampleSentence(text: string): number {
 
 export function buildFrequencyList(
   cues: SubtitleCue[],
-  topN: number = 100
+  topN: number = 100,
+  sourceLang: string = "en"
 ): WordEntry[] {
+  const stopwords = getStopwords(sourceLang);
   const stemToWords: Map<string, Map<string, number>> = new Map();
   const stemToExamples: Map<string, SubtitleCue[]> = new Map();
 
   for (const cue of cues) {
     const tokens = tokenizer.tokenize(cue.text) ?? [];
-    const filtered = removeStopwords(
+    const filtered = stopword.removeStopwords(
       tokens.map((t) => t.toLowerCase()),
-      eng
+      stopwords
     );
 
     for (const token of filtered) {
-      if (token.length < 2) continue;
+      if (token.length < 3) continue;
       const stem = PorterStemmer.stem(token);
 
       if (!stemToWords.has(stem)) stemToWords.set(stem, new Map());
