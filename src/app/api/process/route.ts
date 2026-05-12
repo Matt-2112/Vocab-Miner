@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseSrt } from "@/lib/parseSubtitles";
 import { buildFrequencyList } from "@/lib/frequency";
+import { enrichWithDictionaryExamples } from "@/lib/dictionary";
 import { translateEntries } from "@/lib/translate";
 import { buildAnkiDeck } from "@/lib/buildDeck";
 import { readFileSync } from "fs";
@@ -30,6 +31,7 @@ export async function POST(req: NextRequest) {
   }
 
   const frequencyList = buildFrequencyList(cues, topN);
+  await enrichWithDictionaryExamples(frequencyList, sourceLang);
   const translated = await translateEntries(frequencyList, sourceLang, apiKey);
   const apkgPath = await buildAnkiDeck(translated, deckName);
 
