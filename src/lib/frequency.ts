@@ -30,6 +30,37 @@ function getStopwords(sourceLang: string): string[] {
   return Array.isArray(list) ? (list as string[]) : stopword.eng;
 }
 
+// Builds a set of likely proper nouns by checking how often a word appears
+// capitalised in mid-sentence positions (index > 0 within a cue).
+// Skipped for German because German capitalises all nouns.
+function buildProperNounSet(cues: SubtitleCue[], sourceLang: string): Set<string> {
+  if (sourceLang === "de") return new Set();
+
+  const midCaps = new Map<string, number>();   // lowercase word → capitalised mid-sentence count
+  const midTotal = new Map<string, number>();  // lowercase word → total mid-sentence count
+
+  for (const cue of cues) {
+    const tokens = cue.text.split(/\s+/);
+    for (let i = 1; i < tokens.length; i++) {
+      const raw = tokens[i].replace(/[^\p{L}]/gu, "");
+      if (raw.length < 2) continue;
+      const lower = raw.toLowerCase();
+      midTotal.set(lower, (midTotal.get(lower) ?? 0) + 1);
+      if (/^\p{Lu}/u.test(raw)) {
+        midCaps.set(lower, (midCaps.get(lower) ?? 0) + 1);
+      }
+    }
+  }
+
+  const properNouns = new Set<string>();
+  for (const [word, total] of midTotal) {
+    if (total < 2) continue;
+    const caps = midCaps.get(word) ?? 0;
+    if (caps / total > 0.75) properNouns.add(word);
+  }
+  return properNouns;
+}
+
 const tokenizer = new WordTokenizer();
 
 function scoreExampleSentence(text: string): number {
@@ -46,6 +77,7 @@ export function buildFrequencyList(
   sourceLang: string = "en"
 ): WordEntry[] {
   const stopwords = getStopwords(sourceLang);
+  const properNouns = buildProperNounSet(cues, sourceLang);
   const stemToWords: Map<string, Map<string, number>> = new Map();
   const stemToExamples: Map<string, SubtitleCue[]> = new Map();
 
@@ -58,6 +90,7 @@ export function buildFrequencyList(
 
     for (const token of filtered) {
       if (token.length < 3) continue;
+      if (properNouns.has(token)) continue;
       const stem = PorterStemmer.stem(token);
 
       if (!stemToWords.has(stem)) stemToWords.set(stem, new Map());
