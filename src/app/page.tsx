@@ -1,5 +1,6 @@
 import Link from "next/link";
 import AuthButton from "@/components/AuthButton";
+import UpgradeButton from "@/components/UpgradeButton";
 
 export default function LandingPage() {
   return (
@@ -222,9 +223,7 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <button className="block w-full text-center bg-[#4ade80] text-[#0d0d0d] rounded-lg py-2.5 text-sm font-semibold hover:bg-[#22c55e] transition-colors">
-                Get Pro
-              </button>
+              <UpgradeButton className="block w-full text-center bg-[#4ade80] text-[#0d0d0d] rounded-lg py-2.5 text-sm font-semibold hover:bg-[#22c55e] disabled:opacity-60 transition-colors" />
             </div>
           </div>
         </div>

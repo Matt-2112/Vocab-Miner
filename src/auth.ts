@@ -8,8 +8,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   callbacks: {
     async jwt({ token, account, profile }) {
-      // Only runs on first sign-in (account is present)
       if (account && profile?.email) {
+        // First sign-in: create or find the user record
         const email = profile.email;
         const existing = db
           .prepare("SELECT id, tier FROM users WHERE email = ?")
@@ -31,6 +31,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.uid = id;
           token.tier = "free";
         }
+      } else if (token.uid) {
+        // Subsequent calls: always read tier fresh so webhook upgrades are picked up
+        const row = db
+          .prepare("SELECT tier FROM users WHERE id = ?")
+          .get(token.uid) as { tier: string } | undefined;
+        if (row) token.tier = row.tier;
       }
       return token;
     },
