@@ -1,8 +1,11 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import AuthButton from "@/components/AuthButton";
+import UpgradeButton from "@/components/UpgradeButton";
 
 const SUPPORTED_LANGUAGES = [
   { code: "de", label: "German" },
@@ -22,6 +25,18 @@ const FREE_LIMIT = 50;
 const PRO_LIMIT = 500;
 
 export default function GenerateForm({ tier }: { tier: string }) {
+  const { update } = useSession();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (searchParams.get("upgraded") === "1") {
+      update();
+      router.replace("/generate");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const isPro = tier === "premium";
   const maxCards = isPro ? PRO_LIMIT : FREE_LIMIT;
 
@@ -141,12 +156,9 @@ export default function GenerateForm({ tier }: { tier: string }) {
                   Number of words: <span className="font-semibold text-white">{topN}</span>
                 </label>
                 {!isPro && (
-                  <Link
-                    href="/#pricing"
-                    className="text-[10px] font-semibold tracking-widest uppercase text-[#4ade80]/70 hover:text-[#4ade80] transition-colors"
-                  >
+                  <UpgradeButton className="text-[10px] font-semibold tracking-widest uppercase text-[#4ade80]/70 hover:text-[#4ade80] disabled:opacity-60 transition-colors">
                     Unlock 500 → Pro
-                  </Link>
+                  </UpgradeButton>
                 )}
               </div>
               <input
@@ -161,9 +173,9 @@ export default function GenerateForm({ tier }: { tier: string }) {
               {!isPro && (
                 <p className="text-white/30 text-xs mt-1">
                   Free plan · 50 cards max.{" "}
-                  <Link href="/#pricing" className="text-[#4ade80]/60 hover:text-[#4ade80] transition-colors underline">
+                  <UpgradeButton className="text-[#4ade80]/60 hover:text-[#4ade80] disabled:opacity-60 transition-colors underline">
                     Upgrade for 500.
-                  </Link>
+                  </UpgradeButton>
                 </p>
               )}
             </div>

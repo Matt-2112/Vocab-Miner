@@ -14,13 +14,16 @@ db.exec(`
   )
 `);
 
-// Safe migration: add tier column to databases created before this column existed
-const hasTier = (
+const columns = (
   db.prepare("PRAGMA table_info(users)").all() as { name: string }[]
-).some((col) => col.name === "tier");
+).map((col) => col.name);
 
-if (!hasTier) {
+if (!columns.includes("tier")) {
   db.exec("ALTER TABLE users ADD COLUMN tier TEXT NOT NULL DEFAULT 'free'");
+}
+
+if (!columns.includes("stripe_customer_id")) {
+  db.exec("ALTER TABLE users ADD COLUMN stripe_customer_id TEXT");
 }
 
 export default db;
