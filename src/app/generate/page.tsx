@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import Link from "next/link";
+import AuthButton from "@/components/AuthButton";
 
 const SUPPORTED_LANGUAGES = [
   { code: "de", label: "German" },
@@ -66,6 +67,7 @@ export default function GeneratePage() {
         <Link href="/" className="text-white font-semibold text-lg tracking-tight">
           immerse<span className="text-[#4ade80]">.</span>
         </Link>
+        <AuthButton />
       </nav>
 
       <main className="flex-1 flex items-center justify-center p-6">
