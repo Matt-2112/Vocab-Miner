@@ -1,4 +1,5 @@
 import Link from "next/link";
+import AuthButton from "@/components/AuthButton";
 
 export default function LandingPage() {
   return (
@@ -13,12 +14,15 @@ export default function LandingPage() {
           <a href="#how-it-works" className="hover:text-white transition-colors">How it works</a>
           <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
         </div>
-        <Link
-          href="/generate"
-          className="bg-[#4ade80] text-[#0d0d0d] text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#22c55e] transition-colors"
-        >
-          Get started free
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/generate"
+            className="hidden sm:block text-sm text-white/60 hover:text-white transition-colors font-medium"
+          >
+            Get started free
+          </Link>
+          <AuthButton />
+        </div>
       </nav>
 
       {/* Hero */}
