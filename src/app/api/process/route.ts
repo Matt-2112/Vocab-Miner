@@ -4,15 +4,25 @@ import { buildFrequencyList } from "@/lib/frequency";
 import { enrichWithDictionaryExamples } from "@/lib/dictionary";
 import { translateEntries } from "@/lib/translate";
 import { buildAnkiDeck } from "@/lib/buildDeck";
+import { auth } from "@/auth";
 import { readFileSync } from "fs";
 import type { SourceLanguageCode } from "deepl-node";
 
+const FREE_LIMIT = 50;
+const PRO_LIMIT = 500;
+
 export async function POST(req: NextRequest) {
+  const session = await auth();
+  const cardLimit = session?.user.tier === "premium" ? PRO_LIMIT : FREE_LIMIT;
+
   const formData = await req.formData();
   const file = formData.get("subtitle") as File | null;
   const sourceLang = (formData.get("sourceLang") as SourceLanguageCode) ?? "de";
   const deckName = (formData.get("deckName") as string) ?? "VocabMiner Deck";
-  const topN = parseInt((formData.get("topN") as string) ?? "100", 10);
+  const topN = Math.min(
+    parseInt((formData.get("topN") as string) ?? String(FREE_LIMIT), 10),
+    cardLimit
+  );
 
   if (!file) {
     return NextResponse.json({ error: "No subtitle file provided" }, { status: 400 });
